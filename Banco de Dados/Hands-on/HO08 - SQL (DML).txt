@@ -1,0 +1,76 @@
+Problema:
+
+Projetar o primeiro nome e o último nome dos atores que são diretores;
+Projetar o primeiro nome e o último nome dos atores que não são diretores;
+Projetar o primeiro nome e o último nome dos atores e diretores;
+Projetar o nome dos filmes que não são dirigidos por nenhum diretor;
+Projetar primeiro nome e o último nome dos atores que não atuaram em pelo menos dois filmes;
+Projetar, por gênero e ano, o número médio de filmes com menos de dois atores atuando.
+
+------------------------------------------------//----------------------------------------------------------
+
+
+Página
+1
+de 2
+/*
+Projetar o primeiro nome e o último nome dos atores que são diretores;
+SELECT first_name, last_name
+FROM actors
+INTERSECT
+SELECT first_name, last_name
+FROM directors
+Projetar o primeiro nome e o último nome dos atores que não são diretores;
+SELECT first_name, last_name
+FROM actors
+EXCEPT
+SELECT first_name, last_name
+FROM directors
+Projetar o primeiro nome e o último nome dos atores e diretores;
+SELECT first_name, last_name
+FROM actors
+UNION
+SELECT first_name, last_name
+FROM directors
+Projetar o nome dos filmes que não são dirigidos por nenhum diretor;
+SELECT X.name
+FROM movies as X JOIN (
+SELECT A.id
+FROM movies as A
+EXCEPT
+SELECT B.movie_id
+FROM movies_directors as B
+) as Y ON X.id = Y.id
+Projetar primeiro nome e o último nome dos atores que não atuaram em pelo menos
+dois filmes;
+SELECT X.first_name, X.last_name
+FROM actors as X JOIN (
+SELECT id
+FROM actors
+EXCEPT
+SELECT A.actor_id
+FROM (
+SELECT actor_id, COUNT(*) as TOTAL
+FROM roles
+GROUP BY actor_id
+HAVING TOTAL >= 2
+) as A
+) as Y ON X.id = Y.id
+Projetar, por gênero e ano, o número médio de filmes com menos de dois atores
+atuando.
+SELECT X.genre, K.year, COUNT(*) as TOTAL
+FROM movies_genres as X JOIN (
+SELECT id
+FROM movies
+EXCEPT
+SELECT A.movie_id
+FROM (
+SELECT movie_id, COUNT(*) as TOTAL
+FROM roles
+GROUP BY movie_id
+HAVING TOTAL >= 2
+) as A
+) as Y ON X.movie_id = Y.id
+JOIN movies as K ON (K.id = Y.id)
+GROUP BY X.genre, K.year
+*/
