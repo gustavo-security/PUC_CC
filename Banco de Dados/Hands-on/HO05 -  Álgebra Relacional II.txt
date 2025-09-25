@@ -1,0 +1,53 @@
+Problema:
+
+Projetar o primeiro nome e o último nome dos atores que são diretores;
+Projetar o primeiro nome e o último nome dos atores que não são diretores;
+Projetar o primeiro nome e o último nome dos atores e diretores;
+Projetar o nome dos filmes que não são dirigidos por nenhum diretor;
+Projetar primeiro nome e o último nome dos atores que não atuaram em pelo menos dois filmes;
+Projetar, por gênero e ano, o número médio de filmes com menos de dois atores atuando.
+
+--------------------------------------------------//--------------------------------------------------------
+
+/*
+Projetar o primeiro nome e o último nome dos atores que são diretores;
+A = π first_name, last_name ( actors )
+B = π first_name, last_name ( directors )
+A ∩ B
+Projetar o primeiro nome e o último nome dos atores que não são diretores;
+A = π first_name, last_name ( actors )
+B = π first_name, last_name ( directors )
+A - B
+Projetar o primeiro nome e o último nome dos atores e diretores;
+A = π first_name, last_name ( actors )
+B = π first_name, last_name ( directors )
+A B∪
+Projetar o nome dos filmes que não são dirigidos por nenhum diretor;
+A = π id ( movies )
+B = π movie_id ( movies_directors )
+C = A - B
+D = ρ idm←id ( C )
+E = D idm = id movies⨝
+π name ( E )
+Projetar primeiro nome e o último nome dos atores que não atuaram em pelo menos
+dois filmes;
+A = γ actor_id; count(movie_id)→Total ( roles )
+B = σ Total >= 2 ( A )
+C = π actor_id ( B )
+D = π id ( actors )
+E = D - C
+F = ρ ida←id ( E )
+G = F ida = id actors⨝
+π first_name, last_name ( G )
+Projetar, por gênero e ano, o número médio de filmes com menos de dois atores
+atuando.
+A = γ movie_id; count(actor_id)→Total ( roles )
+B = σ Total >= 2 ( A )
+C = π movie_id ( B )
+D = π id ( movies )
+E = D - C
+F = ρ idm←id ( E )
+G = F idm = id movies⨝
+H = G id = movie_id movies_genres⨝
+γ genre, year;count(id)→Total ( H )
+*/
