@@ -23,4 +23,13 @@ Bem-vindo ao meu repositório de projetos da PUC Minas! Aqui você encontrará e
 ---
 
 ## 📂 Estrutura do Repositório
-
+PUC_CC/
+│
+├── AEDS_II/
+│ ├── LABs/
+│ └── TPs/
+│
+├── Banco de Dados/
+│ └── Trabalhos_Praticos/
+│
+└── README.md
