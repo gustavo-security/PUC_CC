@@ -1,0 +1,190 @@
+---------------------------------------------- Código ----------------------------------------------------
+
+// LED Variables
+const int ledAzul = 10;
+const int ledVerde = 11;
+const int ledAmarelo = 12;
+const int ledVermelho = 13;
+
+// Memory limits
+const int MAX_MEM = 100;  // Total memory positions
+const int PROG_START = 4; // Instructions start at MEM[4]
+const int MAX_PROG = MAX_MEM - PROG_START; // Max instructions = 96
+
+// Arduino Setup
+void setup() {
+  Serial.begin(9600);
+  Serial.println(">> Simulation Started");
+  Serial.println("> Type the instructions (space separated, max 96)");
+  pinMode(ledAzul, OUTPUT);
+  pinMode(ledVerde, OUTPUT);
+  pinMode(ledAmarelo, OUTPUT);
+  pinMode(ledVermelho, OUTPUT);
+}
+
+// Other Variables
+int PC = 4;
+int A, B;
+long W;
+char HEXcode;
+int memSize = 0;  
+String input = "";
+
+
+// LED Display
+void mostrarLed(String output) {
+  digitalWrite(ledVermelho, output[output.length()-4] == '1' ? HIGH : LOW);
+  digitalWrite(ledAmarelo,  output[output.length()-3] == '1' ? HIGH : LOW);
+  digitalWrite(ledVerde,   output[output.length()-2] == '1' ? HIGH : LOW);
+  digitalWrite(ledAzul,    output[output.length()-1] == '1' ? HIGH : LOW);
+}
+
+// ALU Functions
+int zeroL(){ return '0'; }
+int umL(){ return '1'; }
+int copiaA() { return A; } 
+int copiaB() { return B; }
+int nA() { return ~A & 0b1111; }  
+int nB() { return ~B & 0b1111; }  
+int AenB() { return (A & nB()) & 0b1111; }  
+int nAeB() { return (nA() & B) & 0b1111; }  
+int AxB() { return ((A & nB()) | (nA() & B)) & 0b1111; }
+int nAxnB() { return (nA() ^ nB()) & 0b1111; }  
+int nAxnBn() { return (~nAxnB()) & 0b1111; }  
+int AeB() { return (A & B) & 0b1111; }  
+int AeBn() { return (~AeB()) & 0b1111; }  
+int AoB() { return (A | B) & 0b1111; }  
+int AoBn() { return (~AoB()) & 0b1111; }  
+int nAonBnB() { return (nA() | nB()) & 0b1111; }  
+
+// Get Functions
+char getW(String *MEM) {
+  HEXcode = MEM[PC].charAt(2);
+  switch(HEXcode){
+    case '0': W = zeroL(); break;
+    case '1': W = umL(); break;
+    case '2': W = copiaA(); break;
+    case '3': W = copiaB(); break;
+    case '4': W = nA(); break;
+    case '5': W = nB(); break;
+    case '6': W = AenB(); break;
+    case '7': W = nAeB(); break;
+    case '8': W = AxB(); break;
+    case '9': W = nAxnB(); break;
+    case 'A': W = nAxnBn(); break;
+    case 'B': W = AeB(); break;
+    case 'C': W = AeBn(); break;
+    case 'D': W = AoBn(); break;
+    case 'E': W = AoB(); break;
+    case 'F': W = nAonBnB(); break;
+  }
+  mostrarLed(String(W, BIN));
+  String tmp = String(W, HEX);
+  return tmp.charAt(0);
+}
+
+char getX(String *MEM){ return MEM[PC].charAt(0); }
+char getY(String *MEM){ return MEM[PC].charAt(1); }
+
+// Execute Function
+void execute(String *MEM){
+  if(input.length() == 1){
+    MEM[3] = getY(MEM); 
+    MEM[2] = getX(MEM); 
+    
+    A = MEM[2].charAt(0) - 55;
+    B = MEM[3].charAt(0) - 55;
+    
+    if(A <= 2) A = MEM[2].charAt(0) - 48;
+    if(B <= 2) B = MEM[3].charAt(0) - 48;
+    
+    MEM[1] = getW(MEM); 
+    MEM[0] = String(PC+1);
+    if(PC+1 == memSize) MEM[0] = " ";
+  }
+
+  // Display memory
+  Serial.print("    ");
+  for (int i = 0; i < memSize; i++){
+    if(i == PC) Serial.print("v");
+    if(i < 3) Serial.print("    ");
+    if(i == 3) Serial.print("     "); 
+    if(i >= 4) Serial.print("      "); 
+  }
+  Serial.println();
+  Serial.print("->|");
+  for(int i = 0; i < memSize; i++){
+    Serial.print(" ");
+    Serial.print(MEM[i]); 
+    Serial.print(" |");
+  }  
+  Serial.println(" "); 
+}
+
+// Main Loop
+void loop(){
+  static String MEM[MAX_MEM];
+
+  if (Serial.available() > 0 && input == ""){
+    digitalWrite(ledAzul, LOW);
+    digitalWrite(ledVerde, LOW);
+    digitalWrite(ledAmarelo, LOW);
+    digitalWrite(ledVermelho, LOW);
+
+    input = Serial.readString();   	
+    input.trim();
+
+    // Limita o número máximo de instruções a 96
+    int stringCount = PROG_START;
+    int instrAdded = 0;
+    String temp = input;
+    while(temp.length() > 0 && instrAdded < MAX_PROG){
+      int index = temp.indexOf(' ');
+      if(index == -1){ 
+        MEM[stringCount++] = temp;
+        instrAdded++;
+        break;
+      } else {
+        MEM[stringCount++] = temp.substring(0,index);
+        temp = temp.substring(index+1);
+        instrAdded++;
+      }
+    }
+
+    // Inicializa variáveis fixas
+    MEM[0] = String(PC);
+    MEM[1] = " "; 
+    MEM[2] = " "; 
+    MEM[3] = " "; 
+
+    memSize = stringCount;
+
+    execute(MEM);
+
+    Serial.println("Rodar o Programa?(S/N)");
+
+    while (Serial.available() == 0);
+    input = Serial.readString();  
+    input.trim();  
+
+    if (input == "n" || input == "N") {
+      Serial.println();
+      Serial.println(">> Simulation Stopped");
+      return;
+    }
+
+    // Execution Loop
+    PC = 4; // reinicia PC
+    while(PC < memSize){
+      execute(MEM);
+      PC += 1;
+      delay(5000); // <<<<<<<<<<<<<<
+    }
+  }
+}
+
+
+
+------------------------------------------------- LINK ---------------------------------------------------
+
+https://www.tinkercad.com/things/jX2r54XBujx-ep04-ac-ii?sharecode=pvdMaB9y_vIrhFiYJAhyLGe8FE5j5wWXi5c2xWqt-fs
